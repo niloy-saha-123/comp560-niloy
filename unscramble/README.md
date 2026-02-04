@@ -23,7 +23,7 @@ Map scrambled words to correct spellings.
 - **Performance**: The model learned the mapping perfectly for the small vocabulary.
 
 **Sample Output:**
-`![Terminal Output](terminal_output_basic.png)`
+![Terminal Output](terminal_output_basic.png)
 ```
 edf: fed
 rac: car
@@ -46,7 +46,7 @@ atr: tar
 - **Loss**: Low (implied by perfect sampling accuracy).
 
 **Sample Output:**
-`![Terminal Output](terminal_output_advanced.png)`
+![Terminal Output](terminal_output_advanced.png)
 ```
 ehom: home
 nsca: cans
@@ -58,7 +58,7 @@ jasr: jars
 ```
 
 ## WandB Training Graphs
-`![WandB Loss Graph](wandb_loss.png)`
+![WandB Loss Graph](wandb_loss.png)
 
 **Observations:**
 *   The **val/loss** graph shows that the model learns the 3-letter task (Basic) slightly faster and achieves a lower final loss.

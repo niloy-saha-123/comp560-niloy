@@ -24,7 +24,7 @@ Map a random string to its sorted version:
 
 **Sample Output:**
 *(Paste your terminal screenshot here, or use the text below)*
-`![Terminal Output](terminal_output_sort.png)`
+![Terminal Output](terminal_output_sort.png)
 ```
 dkv:dkv         (Correct)
 ncl:cln         (Correct)
@@ -34,7 +34,7 @@ deuv:detv       (Error: hallucinated 't')
 ```
 
 ## WandB Training Graphs
-`![WandB Loss Graph](wandb_loss.png)`
+![WandB Loss Graph](wandb_loss.png)
 
 **Observations:**
 *   The **train/loss** graph demonstrates high stability, with all runs following an identical learning trajectory.
