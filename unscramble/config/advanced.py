@@ -10,9 +10,9 @@ log_interval = 1
 # we expect to overfit on this small dataset, so only save when val improves
 always_save_checkpoint = False
 
-wandb_log = False # override via command line if you like
-wandb_project = 'alphabet-advanced'
-wandb_run_name = 'infant'
+wandb_log = True # override via command line if you like
+wandb_project = 'comp560-unscramble'
+wandb_run_name = 'unscramble-advanced'
 
 dataset = 'advanced'
 gradient_accumulation_steps = 1

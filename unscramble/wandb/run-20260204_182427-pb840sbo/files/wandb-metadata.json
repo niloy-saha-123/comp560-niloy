@@ -1,0 +1,38 @@
+{
+  "os": "macOS-26.2-arm64-arm-64bit",
+  "python": "CPython 3.11.14",
+  "startedAt": "2026-02-04T23:24:27.080363Z",
+  "args": [
+    "config/advanced.py"
+  ],
+  "program": "/Users/niloysaha/IdeaProjects/comp560/comp560-niloy/unscramble/../../comp560-nanoGPT/train.py",
+  "git": {
+    "remote": "https://github.com/niloy-saha-123/comp560-niloy.git",
+    "commit": "b8c606410c498f29e45d746b7476cd846ca815fb"
+  },
+  "email": "sahan@dickinson.edu",
+  "root": "/Users/niloysaha/IdeaProjects/comp560/comp560-niloy/unscramble",
+  "host": "MacBook-Pro-429.local",
+  "executable": "/opt/anaconda3/envs/comp560/bin/python",
+  "cpu_count": 10,
+  "cpu_count_logical": 10,
+  "disk": {
+    "/": {
+      "total": "994662584320",
+      "used": "392517001216"
+    }
+  },
+  "memory": {
+    "total": "25769803776"
+  },
+  "apple": {
+    "name": "Apple M4",
+    "ecpuCores": 6,
+    "pcpuCores": 4,
+    "gpuCores": 10,
+    "memoryGb": 24,
+    "swapTotalBytes": "28991029248",
+    "ramTotalBytes": "25769803776"
+  },
+  "writerId": "9oed8qusdsoc2lhyib0hnc0bq0l6ijve"
+}

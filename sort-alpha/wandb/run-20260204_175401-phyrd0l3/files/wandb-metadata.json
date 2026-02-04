@@ -1,0 +1,38 @@
+{
+  "os": "macOS-26.2-arm64-arm-64bit",
+  "python": "CPython 3.11.14",
+  "startedAt": "2026-02-04T22:54:01.057730Z",
+  "args": [
+    "config/sort_alpha.py"
+  ],
+  "program": "/Users/niloysaha/IdeaProjects/comp560/comp560-niloy/sort-alpha/../../comp560-nanoGPT/train.py",
+  "git": {
+    "remote": "https://github.com/niloy-saha-123/comp560-niloy.git",
+    "commit": "b8c606410c498f29e45d746b7476cd846ca815fb"
+  },
+  "email": "sahan@dickinson.edu",
+  "root": "/Users/niloysaha/IdeaProjects/comp560/comp560-niloy/sort-alpha",
+  "host": "MacBook-Pro-429.local",
+  "executable": "/opt/anaconda3/envs/comp560/bin/python",
+  "cpu_count": 10,
+  "cpu_count_logical": 10,
+  "disk": {
+    "/": {
+      "total": "994662584320",
+      "used": "389146664960"
+    }
+  },
+  "memory": {
+    "total": "25769803776"
+  },
+  "apple": {
+    "name": "Apple M4",
+    "ecpuCores": 6,
+    "pcpuCores": 4,
+    "gpuCores": 10,
+    "memoryGb": 24,
+    "swapTotalBytes": "25769803776",
+    "ramTotalBytes": "25769803776"
+  },
+  "writerId": "bcmmvb32bbgy94sx1hw13mpovvsu08yt"
+}
