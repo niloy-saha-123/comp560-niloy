@@ -5,6 +5,7 @@ Niloy Saha's experiments for COMP560 (Spring 2026)
 ## Experiments
 
 - [**unscramble**](unscramble/) - Word unscrambling using character-level GPT
+- [**sort-alpha**](sort-alpha/) - Alphabetical sorting using character-level GPT
 
 ## Setup
 
