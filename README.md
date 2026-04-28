@@ -6,6 +6,7 @@ Niloy Saha's experiments for COMP560 (Spring 2026)
 
 - [**unscramble**](unscramble/) - Word unscrambling using character-level GPT
 - [**sort-alpha**](sort-alpha/) - Alphabetical sorting using character-level GPT
+- [**autoresearch-tinyshakespeare**](autoresearch-tinyshakespeare/) - Tiny Shakespeare autoresearch study with fixed-budget search
 
 ## Setup
 
