@@ -208,18 +208,24 @@ def run_train_once(
     if checkpoint_path is not None:
         ensure_parent(checkpoint_path)
 
-    proc = subprocess.run(
-        [sys.executable, str(TRAIN)],
-        cwd=ROOT,
-        env=env,
-        check=True,
-        text=True,
-        capture_output=True,
-    )
-    if verbose and proc.stdout:
-        print(proc.stdout, end="")
-    if verbose and proc.stderr:
-        print(proc.stderr, end="", file=sys.stderr)
+    run_kwargs = {
+        "cwd": ROOT,
+        "env": env,
+        "check": True,
+        "text": True,
+    }
+    if verbose:
+        proc = subprocess.run([sys.executable, str(TRAIN)], **run_kwargs)
+    else:
+        proc = subprocess.run(
+            [sys.executable, str(TRAIN)],
+            capture_output=True,
+            **run_kwargs,
+        )
+        if proc.stdout:
+            print(proc.stdout, end="")
+        if proc.stderr:
+            print(proc.stderr, end="", file=sys.stderr)
     return json.loads(result_json_path.read_text(encoding="utf-8"))
 
 
