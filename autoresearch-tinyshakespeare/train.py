@@ -206,13 +206,23 @@ def save_checkpoint(model, optimizer, step, elapsed_s):
         "config": current_config(),
         "torch_rng_state": torch.get_rng_state(),
     }
+    if device == "cuda":
+        payload["torch_cuda_rng_state"] = torch.cuda.get_rng_state()
     torch.save(payload, CKPT_PATH)
+
+
+def move_optimizer_state_to_device(optimizer):
+    for state in optimizer.state.values():
+        for key, value in state.items():
+            if isinstance(value, torch.Tensor):
+                state[key] = value.to(device)
 
 
 def load_checkpoint(model, optimizer):
     if RESUME_FROM is None:
         return 0, 0.0
-    payload = torch.load(RESUME_FROM, map_location=device)
+    # Keep checkpoint tensors on CPU while loading so CPU RNG state stays a CPU ByteTensor.
+    payload = torch.load(RESUME_FROM, map_location="cpu")
     ckpt_cfg = payload.get("config", {})
     expected = current_config()
     for key in ("batch_size", "block_size", "n_embd", "n_head", "n_layer", "dropout"):
@@ -220,8 +230,11 @@ def load_checkpoint(model, optimizer):
             raise ValueError(f"Checkpoint config mismatch for {key}: {ckpt_cfg.get(key)} != {expected.get(key)}")
     model.load_state_dict(payload["model_state"])
     optimizer.load_state_dict(payload["optimizer_state"])
+    move_optimizer_state_to_device(optimizer)
     if "torch_rng_state" in payload:
-        torch.set_rng_state(payload["torch_rng_state"])
+        torch.set_rng_state(payload["torch_rng_state"].cpu())
+    if device == "cuda" and "torch_cuda_rng_state" in payload:
+        torch.cuda.set_rng_state(payload["torch_cuda_rng_state"].cpu())
     return int(payload.get("step", 0)), float(payload.get("elapsed_s", 0.0))
 
 
