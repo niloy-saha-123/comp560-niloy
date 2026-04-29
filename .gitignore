@@ -211,3 +211,5 @@ autoresearch-tinyshakespeare/input.txt
 autoresearch-tinyshakespeare/meta.json
 autoresearch-tinyshakespeare/eval_batches.npz
 autoresearch-tinyshakespeare/*.jsonl
+autoresearch-tinyshakespeare/*.pt
+autoresearch-tinyshakespeare/hyperband_artifacts/

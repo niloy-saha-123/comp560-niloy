@@ -4,6 +4,7 @@ import json
 import os
 import time
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import torch
@@ -15,7 +16,10 @@ ROOT = Path(__file__).resolve().parent
 META_PATH = ROOT / "meta.json"
 BATCH_PATH = ROOT / "eval_batches.npz"
 DATA_PATH = ROOT / "input.txt"
-RESULTS_PATH = ROOT / "results.jsonl"
+RESULTS_PATH = Path(os.environ.get("AR_RESULTS_PATH", ROOT / "results.jsonl"))
+RESULT_JSON_PATH = Path(os.environ["AR_RESULT_JSON_PATH"]) if os.environ.get("AR_RESULT_JSON_PATH") else None
+CKPT_PATH = Path(os.environ["AR_CKPT_PATH"]) if os.environ.get("AR_CKPT_PATH") else None
+RESUME_FROM = Path(os.environ["AR_RESUME_FROM"]) if os.environ.get("AR_RESUME_FROM") else None
 run_name = os.environ.get("AR_RUN_NAME", "baseline")
 
 
@@ -53,6 +57,28 @@ data = torch.tensor([stoi[c] for c in text], dtype=torch.long)
 n = int(0.9 * len(data))
 train_data = data[:n]
 vocab_size = meta["vocab_size"]
+
+
+def ensure_parent(path: Path | None) -> None:
+    if path is not None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+
+def current_config() -> dict[str, Any]:
+    return {
+        "batch_size": batch_size,
+        "block_size": block_size,
+        "n_embd": n_embd,
+        "n_head": n_head,
+        "n_layer": n_layer,
+        "dropout": dropout,
+        "learning_rate": learning_rate,
+        "weight_decay": weight_decay,
+        "grad_clip": grad_clip,
+        "eval_interval": eval_interval,
+        "time_budget_s": time_budget_s,
+        "seed": seed,
+    }
 
 
 def get_batch():
@@ -168,12 +194,52 @@ class GPT(nn.Module):
         return logits, loss
 
 
+def save_checkpoint(model, optimizer, step, elapsed_s):
+    if CKPT_PATH is None:
+        return
+    ensure_parent(CKPT_PATH)
+    payload = {
+        "model_state": model.state_dict(),
+        "optimizer_state": optimizer.state_dict(),
+        "step": step,
+        "elapsed_s": elapsed_s,
+        "config": current_config(),
+        "torch_rng_state": torch.get_rng_state(),
+    }
+    torch.save(payload, CKPT_PATH)
+
+
+def load_checkpoint(model, optimizer):
+    if RESUME_FROM is None:
+        return 0, 0.0
+    payload = torch.load(RESUME_FROM, map_location=device)
+    ckpt_cfg = payload.get("config", {})
+    expected = current_config()
+    for key in ("batch_size", "block_size", "n_embd", "n_head", "n_layer", "dropout"):
+        if ckpt_cfg.get(key) != expected.get(key):
+            raise ValueError(f"Checkpoint config mismatch for {key}: {ckpt_cfg.get(key)} != {expected.get(key)}")
+    model.load_state_dict(payload["model_state"])
+    optimizer.load_state_dict(payload["optimizer_state"])
+    if "torch_rng_state" in payload:
+        torch.set_rng_state(payload["torch_rng_state"])
+    return int(payload.get("step", 0)), float(payload.get("elapsed_s", 0.0))
+
+
+def write_summary(summary: dict[str, Any]) -> None:
+    ensure_parent(RESULTS_PATH)
+    with RESULTS_PATH.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(summary) + "\n")
+    if RESULT_JSON_PATH is not None:
+        ensure_parent(RESULT_JSON_PATH)
+        RESULT_JSON_PATH.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+
+
 model = GPT().to(device)
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
-step = 0
+step, previous_elapsed_s = load_checkpoint(model, optimizer)
 t0 = time.perf_counter()
-while time.perf_counter() - t0 < time_budget_s:
+while previous_elapsed_s + (time.perf_counter() - t0) < time_budget_s:
     xb, yb = get_batch()
     _, loss = model(xb, yb)
     optimizer.zero_grad(set_to_none=True)
@@ -184,23 +250,27 @@ while time.perf_counter() - t0 < time_budget_s:
     step += 1
     if step == 1 or step % eval_interval == 0:
         metrics = fixed_eval(model)
-        elapsed = time.perf_counter() - t0
+        elapsed_total = previous_elapsed_s + (time.perf_counter() - t0)
         print(
             f"step {step:5d} | train {metrics['train']:.4f} | "
-            f"val {metrics['val']:.4f} | elapsed {elapsed:.1f}s",
+            f"val {metrics['val']:.4f} | elapsed {elapsed_total:.1f}s",
             flush=True,
         )
 
-elapsed = time.perf_counter() - t0
+elapsed_run_s = time.perf_counter() - t0
+elapsed_total_s = previous_elapsed_s + elapsed_run_s
 metrics = fixed_eval(model)
+save_checkpoint(model, optimizer, step=step, elapsed_s=elapsed_total_s)
 summary = {
     "run_name": run_name,
     "seed": seed,
     "step": step,
     "train_loss": metrics["train"],
     "val_loss": metrics["val"],
-    "elapsed_s": elapsed,
-    "tokens_per_second": (step * batch_size * block_size) / max(elapsed, 1e-9),
+    "elapsed_s": elapsed_total_s,
+    "run_elapsed_s": elapsed_run_s,
+    "previous_elapsed_s": previous_elapsed_s,
+    "tokens_per_second": (step * batch_size * block_size) / max(elapsed_total_s, 1e-9),
     "device": device,
     "n_embd": n_embd,
     "n_head": n_head,
@@ -213,7 +283,8 @@ summary = {
     "block_size": block_size,
     "eval_interval": eval_interval,
     "time_budget_s": time_budget_s,
+    "checkpoint_path": str(CKPT_PATH) if CKPT_PATH is not None else None,
+    "resumed_from": str(RESUME_FROM) if RESUME_FROM is not None else None,
 }
-with RESULTS_PATH.open("a", encoding="utf-8") as f:
-    f.write(json.dumps(summary) + "\n")
+write_summary(summary)
 print(json.dumps(summary))
