@@ -208,19 +208,37 @@ def run_train_once(
     if checkpoint_path is not None:
         ensure_parent(checkpoint_path)
 
-    run_kwargs = {
-        "cwd": ROOT,
-        "env": env,
-        "check": True,
-        "text": True,
-    }
     if verbose:
-        proc = subprocess.run([sys.executable, str(TRAIN)], **run_kwargs)
+        cmd = [sys.executable, str(TRAIN)]
+        proc = subprocess.Popen(
+            cmd,
+            cwd=ROOT,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        )
+        merged_output: list[str] = []
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            merged_output.append(line)
+            print(line, end="")
+        returncode = proc.wait()
+        if returncode != 0:
+            tail = "".join(merged_output[-50:])
+            raise RuntimeError(
+                f"train.py failed for run {run_name} with exit code {returncode}.\n"
+                f"Last output:\n{tail}"
+            )
     else:
         proc = subprocess.run(
             [sys.executable, str(TRAIN)],
+            cwd=ROOT,
+            env=env,
+            check=True,
+            text=True,
             capture_output=True,
-            **run_kwargs,
         )
         if proc.stdout:
             print(proc.stdout, end="")
